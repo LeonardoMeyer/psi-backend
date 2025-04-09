@@ -1,3 +1,5 @@
-node_modules
-# Keep environment variables out of version control
+# Ignorar arquivos sensíveis
 .env
+*.env
+*.json
+client_secret_*.json

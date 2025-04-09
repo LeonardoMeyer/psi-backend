@@ -9,6 +9,7 @@
     "cors": "^2.8.5",
     "dotenv": "^16.4.7",
     "express": "^5.1.0",
+    "express-list-endpoints": "^7.1.1",
     "googleapis": "^148.0.0",
     "jsonwebtoken": "^9.0.2",
     "jwt-simple": "^0.5.6",

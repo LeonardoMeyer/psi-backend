@@ -12,9 +12,11 @@ exports.registerUser = async (req, res) => {
     });
     res.status(201).json(user);
   } catch (err) {
+    console.error("Erro ao registrar usuário:", err); // já tá aí, mas vamos garantir
     res.status(400).json({ error: "Erro ao registrar usuário." });
   }
 };
+
 
 exports.loginUser = async (req, res) => {
   const { email, password } = req.body;

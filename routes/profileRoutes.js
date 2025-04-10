@@ -1,7 +1,7 @@
 const express = require("express");
 const router = express.Router();
-const { updateProfileImage } = require("../controllers/authController");
+const { uploadProfileImage } = require("../controllers/authController");
 
-router.put("/upload-profile-image/:id", updateProfileImage);
+router.post("/upload-local-image/:id", uploadProfileImage);  // Certifique-se de que a função está sendo passada corretamente
 
 module.exports = router;

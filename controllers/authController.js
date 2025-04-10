@@ -2,6 +2,7 @@ const bcrypt = require("bcryptjs");
 const jwt = require("jsonwebtoken");
 const { PrismaClient } = require("@prisma/client");
 const prisma = new PrismaClient();
+const cloudinary = require("../config/cloudinary");
 
 exports.registerUser = async (req, res) => {
   const { cpf, email, password, dateOfBirth, profileImage } = req.body;
@@ -39,25 +40,33 @@ exports.registerUser = async (req, res) => {
   }  
 };
 
-exports.updateProfileImage = async (req, res) => {
+exports.uploadProfileImage = async (req, res) => {
   const { id } = req.params;
-  const { profileImage } = req.body;
+  const file = req.file;
+
+  if (!file) {
+    return res.status(400).json({ error: "Nenhuma imagem enviada." });
+  }
 
   try {
-    const updatedUser = await prisma.user.update({
-      where: { id: parseInt(id) },
-      data: { profileImage },
+    const result = await cloudinary.uploader.upload_stream({ folder: "profile_images" }, async (error, result) => {
+      if (error) return res.status(500).json({ error: "Erro ao enviar imagem para Cloudinary." });
+
+      const updatedUser = await prisma.user.update({
+        where: { id: parseInt(id) },
+        data: { profileImage: result.secure_url },
+      });
+
+      const { password: _, ...userWithoutPassword } = updatedUser;
+      res.json({ message: "Imagem enviada com sucesso.", user: userWithoutPassword });
     });
 
-    const { password: _, ...userWithoutPassword } = updatedUser;
-
-    res.json({ message: "Imagem de perfil atualizada com sucesso.", user: userWithoutPassword });
-  } catch (error) {
-    console.error("Erro ao atualizar imagem de perfil:", error);
-    res.status(500).json({ error: "Erro ao atualizar imagem de perfil." });
+    result.end(file.buffer);
+  } catch (err) {
+    console.error("Erro ao enviar imagem:", err);
+    res.status(500).json({ error: "Erro ao enviar imagem." });
   }
 };
-
 
 
 exports.loginUser = async (req, res) => {

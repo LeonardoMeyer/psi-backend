@@ -29,7 +29,7 @@ app.use("/api/payments", paymentRoutes);
 app.use("/api/moods", moodRoutes);
 app.use(protectedRoutes);
 app.use(googleCalendarRoutes);
-app.use("/api/profile", profileRoutes);
+app.use("/api/profile", profileRoutes); 
 app.use("/uploads", express.static("uploads"));
 
 app.get("/ping", (req, res) => {

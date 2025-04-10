@@ -6,6 +6,10 @@ const prisma = new PrismaClient();
 exports.registerUser = async (req, res) => {
   const { cpf, email, password, dateOfBirth } = req.body;
   try {
+    if (!dateOfBirth) {
+      return res.status(400).json({ error: "Data de nascimento é obrigatória." });
+    }
+
     const existingUser = await prisma.user.findUnique({ where: { email } });
     if (existingUser) {
       return res.status(400).json({ error: "Email já registrado." });
@@ -17,8 +21,24 @@ exports.registerUser = async (req, res) => {
     }
 
     const hashedPassword = await bcrypt.hash(password, 10);
+
+    // ✅ Log aqui para depuração
+    console.log({
+      cpf,
+      email,
+      password,
+      hashedPassword,
+      dateOfBirth,
+      dateObject: new Date(dateOfBirth)
+    });
+
     const user = await prisma.user.create({
-      data: { cpf, email, password: hashedPassword, dateOfBirth },
+      data: {
+        cpf,
+        email,
+        password: hashedPassword,
+        dateOfBirth: new Date(dateOfBirth),
+      },
     });
 
     const { password: _, ...userWithoutPassword } = user;
@@ -26,13 +46,16 @@ exports.registerUser = async (req, res) => {
   } catch (err) {
     console.error("Erro ao registrar usuário:", err);
     res.status(400).json({ error: "Erro ao registrar usuário." });
-  }  
+  }
 };
+
 
 exports.loginUser = async (req, res) => {
   const { email, password } = req.body;
+
   try {
     const user = await prisma.user.findUnique({ where: { email } });
+
     if (!user || !(await bcrypt.compare(password, user.password))) {
       return res.status(401).json({ error: "Credenciais inválidas." });
     }
@@ -42,8 +65,12 @@ exports.loginUser = async (req, res) => {
     });
 
     const { password: _, ...userWithoutPassword } = user;
+
+    console.log("Usuário logado:", userWithoutPassword);
+
     res.json({ token, user: userWithoutPassword });
   } catch (err) {
-    res.status(500).json({ error: "Erro ao fazer login." });
+    console.error("Erro ao fazer login:", err);
+    res.status(500).json({ error: "Erro ao fazer login. Tente novamente." });
   }
 };

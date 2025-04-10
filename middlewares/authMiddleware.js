@@ -9,7 +9,7 @@ exports.authMiddleware = (req, res, next) => {
 
   try {
     const decoded = jwt.decode(token, process.env.JWT_SECRET);
-    req.userId = decoded.userId;  // Salva o ID do usuário no request
+    req.userId = decoded.userId;
     next();
   } catch (err) {
     return res.status(401).json({ error: "Token inválido ou expirado." });

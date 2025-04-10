@@ -2,7 +2,7 @@ const axios = require("axios");
 
 function formatDateToISO(dateStr) {
   const [day, month, year] = dateStr.split("/");
-  return `${year}-${month}-${day}T00:00:00.000Z`; 
+  return `${year}-${month}-${day}`;
 }
 
 async function testRegister() {
@@ -11,10 +11,11 @@ async function testRegister() {
 
   try {
     const response = await axios.post("http://localhost:5000/api/auth/register", {
-      cpf: "99999999999",
-      email: "teste999@email.com",
+      cpf: "88888888888",
+      email: "imgteste@email.com",
       password: "senha123",
-      dateOfBirth: formattedDate
+      dateOfBirth: formattedDate,
+      profileImage: "https://i.pravatar.cc/300" // 👈 Exemplo de URL
     });
 
     console.log("✅ Usuário registrado com sucesso:");

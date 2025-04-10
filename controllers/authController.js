@@ -4,7 +4,7 @@ const { PrismaClient } = require("@prisma/client");
 const prisma = new PrismaClient();
 
 exports.registerUser = async (req, res) => {
-  const { cpf, email, password, dateOfBirth } = req.body;
+  const { cpf, email, password, dateOfBirth, profileImage } = req.body;
   try {
     if (!dateOfBirth) {
       return res.status(400).json({ error: "Data de nascimento é obrigatória." });
@@ -21,33 +21,43 @@ exports.registerUser = async (req, res) => {
     }
 
     const hashedPassword = await bcrypt.hash(password, 10);
-
-    // ✅ Log aqui para depuração
-    console.log({
-      cpf,
-      email,
-      password,
-      hashedPassword,
-      dateOfBirth,
-      dateObject: new Date(dateOfBirth)
-    });
-
     const user = await prisma.user.create({
       data: {
         cpf,
         email,
         password: hashedPassword,
         dateOfBirth: new Date(dateOfBirth),
+        profileImage,
       },
     });
 
     const { password: _, ...userWithoutPassword } = user;
     res.status(201).json(userWithoutPassword);
   } catch (err) {
-    console.error("Erro ao registrar usuário:", err);
+    console.error("Erro ao registrar usuário:", err); 
     res.status(400).json({ error: "Erro ao registrar usuário." });
+  }  
+};
+
+exports.updateProfileImage = async (req, res) => {
+  const { id } = req.params;
+  const { profileImage } = req.body;
+
+  try {
+    const updatedUser = await prisma.user.update({
+      where: { id: parseInt(id) },
+      data: { profileImage },
+    });
+
+    const { password: _, ...userWithoutPassword } = updatedUser;
+
+    res.json({ message: "Imagem de perfil atualizada com sucesso.", user: userWithoutPassword });
+  } catch (error) {
+    console.error("Erro ao atualizar imagem de perfil:", error);
+    res.status(500).json({ error: "Erro ao atualizar imagem de perfil." });
   }
 };
+
 
 
 exports.loginUser = async (req, res) => {

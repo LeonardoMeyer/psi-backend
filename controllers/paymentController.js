@@ -8,7 +8,7 @@ exports.createCheckoutSession = async (req, res) => {
     const appointment = await prisma.appointment.findUnique({ where: { id: appointmentId } });
     if (!appointment) return res.status(404).json({ error: "Consulta não encontrada" });
 
-    const priceInCents = 12000; // R$120,00
+    const priceInCents = 12000;
 
     const session = await stripe.checkout.sessions.create({
       payment_method_types: method === "pix" ? ["pix"] : ["card"],

@@ -48,7 +48,6 @@ exports.getAvailableSlots = async (req, res) => {
       },
     });
     const busy = busyEvents.data.calendars.primary.busy;
-    // Lógica simplificada: retorna horários entre 08:00 e 18:00 que não estão ocupados
     const available = [];
     const now = new Date();
     for (let i = 0; i < 7; i++) {

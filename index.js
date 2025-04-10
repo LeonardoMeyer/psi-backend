@@ -7,37 +7,35 @@ process.on('unhandledRejection', (reason, promise) => {
 
 const express = require("express");
 const cors = require("cors");
-const listRoutes = require("express-list-endpoints"); // <-- adicionado
+const listRoutes = require("express-list-endpoints"); 
 require("dotenv").config();
 
 const app = express();
 
-// Importação das rotas
 const authRoutes = require("./routes/authRoutes");
 const appointmentRoutes = require("./routes/appointmentRoutes");
 const paymentRoutes = require("./routes/paymentRoutes");
 const moodRoutes = require("./routes/moodRoutes");
 const protectedRoutes = require("./routes/protectedRoutes");
 const googleCalendarRoutes = require("./routes/googleCalendarRoutes");
+const profileRoutes = require("./routes/profileRoutes");
 
-// Middlewares globais
 app.use(cors());
 app.use(express.json());
 
-// Rotas
 app.use("/api/auth", authRoutes);
 app.use("/api/appointments", appointmentRoutes);
 app.use("/api/payments", paymentRoutes);
 app.use("/api/moods", moodRoutes);
 app.use(protectedRoutes);
 app.use(googleCalendarRoutes);
+app.use("/api/profile", profileRoutes);
+app.use("/uploads", express.static("uploads"));
 
-// Rota de teste
 app.get("/ping", (req, res) => {
   res.send("pong");
 });
 
-// Log das rotas
 console.log("Rotas carregadas:");
 console.table(listRoutes(app));
 

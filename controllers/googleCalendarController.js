@@ -7,7 +7,6 @@ const oauth2Client = new google.auth.OAuth2(
   "http://localhost:5000/oauth2callback"
 );
 
-// Gera URL para autenticar via navegador
 exports.getAuthURL = (req, res) => {
   const scopes = ["https://www.googleapis.com/auth/calendar"];
   const url = oauth2Client.generateAuthUrl({
@@ -17,7 +16,6 @@ exports.getAuthURL = (req, res) => {
   res.redirect(url);
 };
 
-// Callback após autenticação
 exports.oauth2callback = async (req, res) => {
   const { code } = req.query;
   const { tokens } = await oauth2Client.getToken(code);
@@ -29,12 +27,11 @@ exports.oauth2callback = async (req, res) => {
   res.send("Autenticado com sucesso! Agora você pode fechar esta janela.");
 };
 
-// Criar evento no Google Calendar
 exports.createEvent = async (req, res) => {
   const { summary, description, startDateTime, endDateTime } = req.body;
   
   oauth2Client.setCredentials({
-    refresh_token: process.env.GOOGLE_REFRESH_TOKEN, // você salvará este token após autenticação
+    refresh_token: process.env.GOOGLE_REFRESH_TOKEN, 
   });
 
   const calendar = google.calendar({ version: "v3", auth: oauth2Client });

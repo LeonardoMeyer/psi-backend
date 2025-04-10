@@ -2,7 +2,7 @@ const bcrypt = require("bcryptjs");
 const jwt = require("jsonwebtoken");
 const { PrismaClient } = require("@prisma/client");
 const prisma = new PrismaClient();
-const cloudinary = require("../config/cloudinary");
+const cloudinary = require("../config/cloudinary"); // Remova a duplicata desta linha
 
 exports.registerUser = async (req, res) => {
   const { cpf, email, password, dateOfBirth, profileImage } = req.body;
@@ -41,25 +41,33 @@ exports.registerUser = async (req, res) => {
 };
 
 exports.uploadProfileImage = async (req, res) => {
-  const { id } = req.params;
-  const file = req.file;
+  console.log(req.file);  // Verificando a imagem que foi enviada
+  const { id } = req.params;  // Obtendo o ID do usuário da URL
+  const file = req.file;  // Pegando a imagem do request
 
   if (!file) {
     return res.status(400).json({ error: "Nenhuma imagem enviada." });
   }
 
   try {
-    const result = await cloudinary.uploader.upload_stream({ folder: "profile_images" }, async (error, result) => {
-      if (error) return res.status(500).json({ error: "Erro ao enviar imagem para Cloudinary." });
+    const result = await cloudinary.uploader.upload_stream(
+      { folder: "profile_images" },
+      async (error, result) => {
+        if (error) {
+          console.error("Erro do Cloudinary:", error);
+          return res.status(500).json({ error: "Erro ao enviar imagem para Cloudinary." });
+        }
 
-      const updatedUser = await prisma.user.update({
-        where: { id: parseInt(id) },
-        data: { profileImage: result.secure_url },
-      });
+        const updatedUser = await prisma.user.update({
+          where: { id: parseInt(id) },
+          data: { profileImage: result.secure_url }
+        });
 
-      const { password: _, ...userWithoutPassword } = updatedUser;
-      res.json({ message: "Imagem enviada com sucesso.", user: userWithoutPassword });
-    });
+        const { password: _, ...userWithoutPassword } = updatedUser;
+
+        res.json({ message: "Imagem enviada com sucesso.", user: userWithoutPassword });
+      }
+    );
 
     result.end(file.buffer);
   } catch (err) {
@@ -67,7 +75,6 @@ exports.uploadProfileImage = async (req, res) => {
     res.status(500).json({ error: "Erro ao enviar imagem." });
   }
 };
-
 
 exports.loginUser = async (req, res) => {
   const { email, password } = req.body;

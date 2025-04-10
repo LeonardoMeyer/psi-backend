@@ -1,36 +1,40 @@
-const cloudinary = require("cloudinary").v2;
+const cloudinary = require("../config/cloudinary");
 const fs = require("fs");
 const { PrismaClient } = require("@prisma/client");
 const prisma = new PrismaClient();
 
 exports.uploadProfileImage = async (req, res) => {
+  console.log(req.file);
   const { id } = req.params;
+  const file = req.file;
 
-  if (!req.file) {
+  if (!file) {
     return res.status(400).json({ error: "Nenhuma imagem enviada." });
   }
 
   try {
-    const result = await cloudinary.uploader.upload(req.file.path, {
-      folder: "profile_images",
-    });
+    const result = await cloudinary.uploader.upload_stream(
+      { folder: "profile_images" }, 
+      async (error, result) => {
+        if (error) {
+          console.error("Erro ao enviar imagem para Cloudinary:", error);
+          return res.status(500).json({ error: "Erro ao enviar imagem para Cloudinary." });
+        }
 
-    fs.unlink(req.file.path, (err) => {
-      if (err) console.warn("Erro ao deletar o arquivo local:", err);
-    });
+        const updatedUser = await prisma.user.update({
+          where: { id: parseInt(id) },
+          data: { profileImage: result.secure_url },
+        });
 
-    const updatedUser = await prisma.user.update({
-      where: { id: parseInt(id) },
-      data: { profileImage: result.secure_url },
-    });
+        const { password: _, ...userWithoutPassword } = updatedUser;
 
-    const { password: _, ...userWithoutPassword } = updatedUser;
-    res.json({
-      message: "Imagem de perfil atualizada com sucesso.",
-      user: userWithoutPassword,
-    });
-  } catch (error) {
-    console.error("Erro ao fazer upload da imagem:", error);
-    res.status(500).json({ error: "Erro ao fazer upload da imagem." });
+        res.json({ message: "Imagem de perfil enviada com sucesso.", user: userWithoutPassword });
+      }
+    );
+
+    result.end(file.buffer);
+  } catch (err) {
+    console.error("Erro ao enviar imagem:", err);
+    res.status(500).json({ error: "Erro ao enviar imagem." });
   }
 };

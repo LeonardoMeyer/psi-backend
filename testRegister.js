@@ -15,7 +15,7 @@ async function testRegister() {
       email: "imgteste@email.com",
       password: "senha123",
       dateOfBirth: formattedDate,
-      profileImage: "https://i.pravatar.cc/300" // 👈 Exemplo de URL
+      profileImage: "https://i.pravatar.cc/300" 
     });
 
     console.log("✅ Usuário registrado com sucesso:");

@@ -2,7 +2,7 @@ const bcrypt = require("bcryptjs");
 const jwt = require("jsonwebtoken");
 const { PrismaClient } = require("@prisma/client");
 const prisma = new PrismaClient();
-const cloudinary = require("../config/cloudinary"); // Remova a duplicata desta linha
+const cloudinary = require("../config/cloudinary");
 
 exports.registerUser = async (req, res) => {
   const { cpf, email, password, dateOfBirth, profileImage } = req.body;
@@ -35,15 +35,81 @@ exports.registerUser = async (req, res) => {
     const { password: _, ...userWithoutPassword } = user;
     res.status(201).json(userWithoutPassword);
   } catch (err) {
-    console.error("Erro ao registrar usuário:", err); 
+    console.error("Erro ao registrar usuário:", err);
     res.status(400).json({ error: "Erro ao registrar usuário." });
-  }  
+  }
+};
+
+exports.loginUser = async (req, res) => {
+  const { email, password } = req.body;
+
+  try {
+    const user = await prisma.user.findUnique({ where: { email } });
+
+    if (!user || !(await bcrypt.compare(password, user.password))) {
+      return res.status(401).json({ error: "Credenciais inválidas." });
+    }
+
+    const token = jwt.sign({ userId: user.id }, process.env.JWT_SECRET, {
+      expiresIn: "7d",
+    });
+
+    const { password: _, ...userWithoutPassword } = user;
+
+    console.log("Usuário logado:", userWithoutPassword);
+
+    res.json({ token, user: userWithoutPassword });
+  } catch (err) {
+    console.error("Erro ao fazer login:", err);
+    res.status(500).json({ error: "Erro ao fazer login. Tente novamente." });
+  }
+};
+
+exports.logoutUser = async (req, res) => {
+  res.json({ message: "Logout realizado com sucesso." });
+};
+
+exports.deleteUser = async (req, res) => {
+  const { id } = req.params;
+
+  try {
+    const deletedUser = await prisma.user.delete({
+      where: { id: parseInt(id) },
+    });
+    res.json({ message: "Conta excluída com sucesso.", user: deletedUser });
+  } catch (err) {
+    console.error("Erro ao excluir usuário:", err);
+    res.status(500).json({ error: "Erro ao excluir usuário." });
+  }
+};
+
+exports.updateUser = async (req, res) => {
+  const { id } = req.params;
+  const { email, password, profileImage } = req.body;
+
+  const updateData = {};
+  if (email) updateData.email = email;
+  if (password) updateData.password = await bcrypt.hash(password, 10);
+  if (profileImage) updateData.profileImage = profileImage;
+
+  try {
+    const updatedUser = await prisma.user.update({
+      where: { id: parseInt(id) },
+      data: updateData,
+    });
+
+    const { password: _, ...userWithoutPassword } = updatedUser;
+    res.json({ message: "Dados atualizados com sucesso.", user: userWithoutPassword });
+  } catch (err) {
+    console.error("Erro ao atualizar dados:", err);
+    res.status(500).json({ error: "Erro ao atualizar dados." });
+  }
 };
 
 exports.uploadProfileImage = async (req, res) => {
-  console.log(req.file);  // Verificando a imagem que foi enviada
-  const { id } = req.params;  // Obtendo o ID do usuário da URL
-  const file = req.file;  // Pegando a imagem do request
+  console.log(req.file);
+  const { id } = req.params;
+  const file = req.file;
 
   if (!file) {
     return res.status(400).json({ error: "Nenhuma imagem enviada." });
@@ -73,30 +139,5 @@ exports.uploadProfileImage = async (req, res) => {
   } catch (err) {
     console.error("Erro ao enviar imagem:", err);
     res.status(500).json({ error: "Erro ao enviar imagem." });
-  }
-};
-
-exports.loginUser = async (req, res) => {
-  const { email, password } = req.body;
-
-  try {
-    const user = await prisma.user.findUnique({ where: { email } });
-
-    if (!user || !(await bcrypt.compare(password, user.password))) {
-      return res.status(401).json({ error: "Credenciais inválidas." });
-    }
-
-    const token = jwt.sign({ userId: user.id }, process.env.JWT_SECRET, {
-      expiresIn: "7d",
-    });
-
-    const { password: _, ...userWithoutPassword } = user;
-
-    console.log("Usuário logado:", userWithoutPassword);
-
-    res.json({ token, user: userWithoutPassword });
-  } catch (err) {
-    console.error("Erro ao fazer login:", err);
-    res.status(500).json({ error: "Erro ao fazer login. Tente novamente." });
   }
 };

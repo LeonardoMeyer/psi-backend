@@ -4,6 +4,7 @@ const jwt = require("jsonwebtoken");
 const { PrismaClient } = require("@prisma/client");
 const prisma = new PrismaClient();
 const cloudinary = require("../config/cloudinary");
+const sendEmail = require("../config/emailService");
 
 exports.registerUser = [
   body('email').isEmail().withMessage('Email inválido'),
@@ -42,6 +43,11 @@ exports.registerUser = [
       });
 
       const { password: _, ...userWithoutPassword } = user;
+
+      const confirmationLink = `http://localhost:5000/api/auth/confirm-email/${user.id}`;
+      const emailText = `Olá ${user.email},\n\nPor favor, clique no link para confirmar seu e-mail: ${confirmationLink}`;
+      await sendEmail(user.email, 'Confirmação de Cadastro', emailText);
+
       res.status(201).json(userWithoutPassword);
     } catch (err) {
       console.error("Erro ao registrar usuário:", err);
@@ -90,28 +96,39 @@ exports.deleteUser = async (req, res) => {
   }
 };
 
-exports.updateUser = async (req, res) => {
-  const { id } = req.params;
-  const { email, password, profileImage } = req.body;
+exports.updateUser = [
+  body('email').optional().isEmail().withMessage('Email inválido'),
+  body('password').optional().isLength({ min: 6 }).withMessage('A senha deve ter pelo menos 6 caracteres'),
+  body('profileImage').optional().isURL().withMessage('Imagem de perfil inválida'),
 
-  const updateData = {};
-  if (email) updateData.email = email;
-  if (password) updateData.password = await bcrypt.hash(password, 10);
-  if (profileImage) updateData.profileImage = profileImage;
+  async (req, res) => {
+    const { id } = req.params;
+    const { email, password, profileImage } = req.body;
 
-  try {
-    const updatedUser = await prisma.user.update({
-      where: { id: parseInt(id) },
-      data: updateData,
-    });
+    const errors = validationResult(req);
+    if (!errors.isEmpty()) {
+      return res.status(400).json({ errors: errors.array() });
+    }
 
-    const { password: _, ...userWithoutPassword } = updatedUser;
-    res.json({ message: "Dados atualizados com sucesso.", user: userWithoutPassword });
-  } catch (err) {
-    console.error("Erro ao atualizar dados:", err);
-    res.status(500).json({ error: "Erro ao atualizar dados." });
+    const updateData = {};
+    if (email) updateData.email = email;
+    if (password) updateData.password = await bcrypt.hash(password, 10);
+    if (profileImage) updateData.profileImage = profileImage;
+
+    try {
+      const updatedUser = await prisma.user.update({
+        where: { id: parseInt(id) },
+        data: updateData,
+      });
+
+      const { password: _, ...userWithoutPassword } = updatedUser;
+      res.json({ message: "Dados atualizados com sucesso.", user: userWithoutPassword });
+    } catch (err) {
+      console.error("Erro ao atualizar dados:", err);
+      res.status(500).json({ error: "Erro ao atualizar dados." });
+    }
   }
-};
+];
 
 exports.uploadProfileImage = async (req, res) => {
   console.log(req.file);
@@ -137,7 +154,6 @@ exports.uploadProfileImage = async (req, res) => {
         });
 
         const { password: _, ...userWithoutPassword } = updatedUser;
-
         res.json({ message: "Imagem enviada com sucesso.", user: userWithoutPassword });
       }
     );

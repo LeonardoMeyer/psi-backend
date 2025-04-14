@@ -1,44 +1,54 @@
+const { body, validationResult } = require('express-validator');
 const bcrypt = require("bcryptjs");
 const jwt = require("jsonwebtoken");
 const { PrismaClient } = require("@prisma/client");
 const prisma = new PrismaClient();
 const cloudinary = require("../config/cloudinary");
 
-exports.registerUser = async (req, res) => {
-  const { cpf, email, password, dateOfBirth, profileImage } = req.body;
-  try {
-    if (!dateOfBirth) {
-      return res.status(400).json({ error: "Data de nascimento é obrigatória." });
+exports.registerUser = [
+  body('email').isEmail().withMessage('Email inválido'),
+  body('password').isLength({ min: 6 }).withMessage('A senha deve ter pelo menos 6 caracteres'),
+  body('cpf').isLength({ min: 11, max: 11 }).withMessage('CPF inválido'),
+  body('dateOfBirth').isDate().withMessage('Data de nascimento inválida'),
+  
+  async (req, res) => {
+    const { cpf, email, password, dateOfBirth, profileImage } = req.body;
+
+    const errors = validationResult(req);
+    if (!errors.isEmpty()) {
+      return res.status(400).json({ errors: errors.array() });
     }
 
-    const existingUser = await prisma.user.findUnique({ where: { email } });
-    if (existingUser) {
-      return res.status(400).json({ error: "Email já registrado." });
+    try {
+      const existingUser = await prisma.user.findUnique({ where: { email } });
+      if (existingUser) {
+        return res.status(400).json({ error: "Email já registrado." });
+      }
+
+      const existingCpf = await prisma.user.findUnique({ where: { cpf } });
+      if (existingCpf) {
+        return res.status(400).json({ error: "CPF já registrado." });
+      }
+
+      const hashedPassword = await bcrypt.hash(password, 10);
+      const user = await prisma.user.create({
+        data: {
+          cpf,
+          email,
+          password: hashedPassword,
+          dateOfBirth: new Date(dateOfBirth),
+          profileImage,
+        },
+      });
+
+      const { password: _, ...userWithoutPassword } = user;
+      res.status(201).json(userWithoutPassword);
+    } catch (err) {
+      console.error("Erro ao registrar usuário:", err);
+      res.status(400).json({ error: "Erro ao registrar usuário." });
     }
-
-    const existingCpf = await prisma.user.findUnique({ where: { cpf } });
-    if (existingCpf) {
-      return res.status(400).json({ error: "CPF já registrado." });
-    }
-
-    const hashedPassword = await bcrypt.hash(password, 10);
-    const user = await prisma.user.create({
-      data: {
-        cpf,
-        email,
-        password: hashedPassword,
-        dateOfBirth: new Date(dateOfBirth),
-        profileImage,
-      },
-    });
-
-    const { password: _, ...userWithoutPassword } = user;
-    res.status(201).json(userWithoutPassword);
-  } catch (err) {
-    console.error("Erro ao registrar usuário:", err);
-    res.status(400).json({ error: "Erro ao registrar usuário." });
   }
-};
+];
 
 exports.loginUser = async (req, res) => {
   const { email, password } = req.body;
@@ -55,9 +65,6 @@ exports.loginUser = async (req, res) => {
     });
 
     const { password: _, ...userWithoutPassword } = user;
-
-    console.log("Usuário logado:", userWithoutPassword);
-
     res.json({ token, user: userWithoutPassword });
   } catch (err) {
     console.error("Erro ao fazer login:", err);

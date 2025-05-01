@@ -1,0 +1,74 @@
+<!-- welcome-email.html -->
+<!DOCTYPE html>
+<html lang="pt-br">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Bem-vindo ao nosso serviço</title>
+  <style>
+    body {
+      font-family: Arial, sans-serif;
+      background-color: #e9f7f2;
+      color: #2e5c47;
+      margin: 0;
+      padding: 0;
+    }
+    .container {
+      width: 100%;
+      max-width: 600px;
+      margin: 20px auto;
+      background-color: #fff;
+      padding: 20px;
+      border-radius: 10px;
+      box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+    }
+    h1 {
+      color: #2e5c47;
+      font-size: 2.5em;
+      text-align: center;
+    }
+    p {
+      font-size: 1.1em;
+      line-height: 1.6;
+      margin-bottom: 20px;
+    }
+    .button {
+      display: block;
+      width: 200px;
+      margin: 0 auto;
+      padding: 10px;
+      background-color: #58a388;
+      color: white;
+      text-align: center;
+      font-size: 1.2em;
+      text-decoration: none;
+      border-radius: 5px;
+    }
+    .footer {
+      text-align: center;
+      font-size: 0.9em;
+      color: #8d8d8d;
+      margin-top: 20px;
+    }
+    .footer a {
+      color: #58a388;
+      text-decoration: none;
+    }
+  </style>
+</head>
+<body>
+
+  <div class="container">
+    <h1>Bem-vindo ao nosso espaço de cuidado</h1>
+    <p>Olá, {{name}}!</p>
+    <p>Ficamos muito felizes em tê-lo conosco. O nosso espaço é dedicado a ajudá-lo a alcançar equilíbrio e bem-estar. Estamos aqui para oferecer o suporte necessário em sua jornada de autoconhecimento.</p>
+    <p>Se precisar de alguma ajuda ou tiver dúvidas, nossa equipe está pronta para auxiliá-lo. Clique no botão abaixo para acessar seu perfil e começar a explorar nossos serviços:</p>
+    <a href="{{supportLink}}" class="button">Acessar meu perfil</a>
+    <div class="footer">
+      <p>Se você tiver algum problema ou dúvida, não hesite em nos <a href="{{supportLink}}">contatar</a>.</p>
+      <p>Estamos ansiosos para caminhar ao seu lado!</p>
+    </div>
+  </div>
+
+</body>
+</html>

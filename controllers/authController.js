@@ -11,7 +11,7 @@ exports.registerUser = [
   body('password').isLength({ min: 6 }).withMessage('A senha deve ter pelo menos 6 caracteres'),
   body('cpf').isLength({ min: 11, max: 11 }).withMessage('CPF inválido'),
   body('dateOfBirth').isDate().withMessage('Data de nascimento inválida'),
-  
+
   async (req, res) => {
     const { cpf, email, password, dateOfBirth, profileImage } = req.body;
 
@@ -32,6 +32,7 @@ exports.registerUser = [
       }
 
       const hashedPassword = await bcrypt.hash(password, 10);
+
       const user = await prisma.user.create({
         data: {
           cpf,
@@ -42,13 +43,13 @@ exports.registerUser = [
         },
       });
 
-      const { password: _, ...userWithoutPassword } = user;
-
       const confirmationLink = `http://localhost:5000/api/auth/confirm-email/${user.id}`;
       const emailText = `Olá ${user.email},\n\nPor favor, clique no link para confirmar seu e-mail: ${confirmationLink}`;
-      await sendEmail(user.email, 'Confirmação de Cadastro', emailText);
 
-      res.status(201).json(userWithoutPassword);
+      await sendEmail(user.email, 'Confirmação de Cadastro', 'confirmation-email', { confirmationLink });
+
+      const { password: _, ...userWithoutPassword } = user;
+      res.status(201).json(userWithoutPassword); 
     } catch (err) {
       console.error("Erro ao registrar usuário:", err);
       res.status(400).json({ error: "Erro ao registrar usuário." });

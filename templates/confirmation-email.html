@@ -1,0 +1,44 @@
+<!DOCTYPE html>
+<html lang="pt-br">
+<head>
+    <meta charset="UTF-8">
+    <title>Confirmação de Cadastro</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            color: #333;
+            background-color: #f4f4f9;
+        }
+        h1 {
+            color: #2e7d32;
+        }
+        .container {
+            margin: 0 auto;
+            max-width: 600px;
+            padding: 20px;
+            background-color: #fff;
+            box-shadow: 0px 0px 10px rgba(0, 0, 0, 0.1);
+        }
+        .btn {
+            background-color: #2e7d32;
+            color: white;
+            padding: 10px 20px;
+            text-decoration: none;
+            border-radius: 5px;
+        }
+        .footer {
+            font-size: 12px;
+            color: #777;
+            margin-top: 30px;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>Olá {{name}},</h1>
+        <p>Obrigado por se cadastrar em nosso site! Para confirmar seu cadastro, clique no botão abaixo:</p>
+        <a href="{{confirmationLink}}" class="btn">Confirmar Cadastro</a>
+        <p class="footer">Se você não se registrou em nosso site, por favor ignore este e-mail.</p>
+    </div>
+</body>
+</html>
